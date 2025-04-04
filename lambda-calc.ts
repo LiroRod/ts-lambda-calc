@@ -25,6 +25,36 @@ const App = (func: LambdaTerm, arg: LambdaTerm): LambdaTerm => ({ kind: 'applica
 
 
 // core logic
-// TODO: too tired now its 4:48 am
 
 
+/*
+  Checks if a variable name occus gree in a given term
+  this is needed to prevent variable capture during substitution.
+*/
+
+function isFree(varName: string, term: LambdaTerm): boolean {
+  switch (term.kind) {
+    case 'variable':
+      return term.name === varName;
+    case 'abstraction': // here we check if the bound variable is the same as varName, varName is no longer free within the body.
+      if (term.param === varName) {
+        return false
+      }
+      return isFree(varName, term.body);
+    case 'application': // rec check the func and the arg
+      return isFree(varName, term.func) || isFree(varName, term.arg);
+  }
+}
+
+/*
+  Generates a new variable name on an existing name, avoiding a set of used names.
+  Simple stategy: append primes (').
+*/
+
+function freshVar(varName: string, usedNames: Set<string>): string {
+  let newName = varName;
+  while (usedNames.has(newName)) {
+    newName += "'"
+  }
+  return newName;
+}
